@@ -4,6 +4,11 @@ include_once 'includes/db_connect.php';
 include_once 'includes/functions.php';
 include_once 'includes/auth.php';
 
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Check if user is logged in
 checkAuth();
 
 // Check if user is admin
@@ -21,48 +26,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $password = $_POST['password'];
         
         if (!empty($username) && !empty($password)) {
-            $hashedPassword = hashPassword($password);
-            
-            $sql = "INSERT INTO users (username, password) VALUES (?, ?)";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ss", $username, $hashedPassword);
-            
-            if ($stmt->execute()) {
-                $message = '<div class="alert alert-success">Utilisateur créé avec succès!</div>';
-            } else {
-                $message = '<div class="alert alert-danger">Erreur lors de la création: ' . $stmt->error . '</div>';
+            try {
+                $hashedPassword = hashPassword($password);
+                
+                $sql = "INSERT INTO users (username, password) VALUES (?, ?)";
+                $stmt = $conn->prepare($sql);
+                
+                if (!$stmt) {
+                    throw new Exception("Erreur de préparation de la requête: " . $conn->error);
+                }
+                
+                $stmt->bind_param("ss", $username, $hashedPassword);
+                
+                if ($stmt->execute()) {
+                    $message = '<div class="alert alert-success">Utilisateur créé avec succès!</div>';
+                } else {
+                    throw new Exception("Erreur lors de l'exécution de la requête: " . $stmt->error);
+                }
+            } catch (Exception $e) {
+                $message = '<div class="alert alert-danger">Erreur: ' . htmlspecialchars($e->getMessage()) . '</div>';
+                error_log($e->getMessage());
             }
         }
     } elseif ($_POST['action'] === 'delete' && isset($_POST['user_id'])) {
-        $user_id = $_POST['user_id'];
-        
-        // Prevent deleting admin user
-        $sql = "SELECT username FROM users WHERE id = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $user = $result->fetch_assoc();
-        
-        if ($user['username'] !== 'admin') {
-            $sql = "DELETE FROM users WHERE id = ?";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("i", $user_id);
+        try {
+            $user_id = $_POST['user_id'];
             
-            if ($stmt->execute()) {
-                $message = '<div class="alert alert-success">Utilisateur supprimé avec succès!</div>';
-            } else {
-                $message = '<div class="alert alert-danger">Erreur lors de la suppression: ' . $stmt->error . '</div>';
+            // Prevent deleting admin user
+            $sql = "SELECT username FROM users WHERE id = ?";
+            $stmt = $conn->prepare($sql);
+            
+            if (!$stmt) {
+                throw new Exception("Erreur de préparation de la requête: " . $conn->error);
             }
-        } else {
-            $message = '<div class="alert alert-danger">Impossible de supprimer l\'utilisateur admin!</div>';
+            
+            $stmt->bind_param("i", $user_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $user = $result->fetch_assoc();
+            
+            if ($user['username'] !== 'admin') {
+                $sql = "DELETE FROM users WHERE id = ?";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param("i", $user_id);
+                
+                if ($stmt->execute()) {
+                    $message = '<div class="alert alert-success">Utilisateur supprimé avec succès!</div>';
+                } else {
+                    throw new Exception("Erreur lors de la suppression: " . $stmt->error);
+                }
+            } else {
+                $message = '<div class="alert alert-danger">Impossible de supprimer l\'utilisateur admin!</div>';
+            }
+        } catch (Exception $e) {
+            $message = '<div class="alert alert-danger">Erreur: ' . htmlspecialchars($e->getMessage()) . '</div>';
+            error_log($e->getMessage());
         }
     }
 }
 
 // Get all users
-$sql = "SELECT * FROM users ORDER BY created_at DESC";
-$result = $conn->query($sql);
+try {
+    $sql = "SELECT * FROM users ORDER BY created_at DESC";
+    $result = $conn->query($sql);
+    
+    if (!$result) {
+        throw new Exception("Erreur lors de la récupération des utilisateurs: " . $conn->error);
+    }
+} catch (Exception $e) {
+    $message = '<div class="alert alert-danger">Erreur: ' . htmlspecialchars($e->getMessage()) . '</div>';
+    error_log($e->getMessage());
+    $result = false;
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -133,7 +168,7 @@ $result = $conn->query($sql);
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if ($result->num_rows > 0): ?>
+                            <?php if ($result && $result->num_rows > 0): ?>
                                 <?php while($row = $result->fetch_assoc()): ?>
                                     <tr>
                                         <td><?php echo $row['id']; ?></td>
