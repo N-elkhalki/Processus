@@ -92,26 +92,47 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
                                     <span class="label">Projet:</span>
                                     <span class="value"><?php echo htmlspecialchars($demande['projet']); ?></span>
                                 </div>
+                                <?php if (!empty($demande['telephone'])): ?>
+                                <div class="detail-item">
+                                    <span class="label">Téléphone:</span>
+                                    <span class="value"><?php echo htmlspecialchars($demande['telephone']); ?></span>
+                                </div>
+                                <?php endif; ?>
+                                <?php if (!empty($demande['email'])): ?>
+                                <div class="detail-item">
+                                    <span class="label">Email:</span>
+                                    <span class="value"><?php echo htmlspecialchars($demande['email']); ?></span>
+                                </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                         
                         <div class="process-timeline">
                             <h3>Historique du Processus</h3>
                             <ul class="timeline">
+                                <!-- Entrevue -->
                                 <li class="timeline-item active">
                                     <div class="timeline-marker"></div>
                                     <div class="timeline-content">
                                         <h4>Entrevue</h4>
                                         <p class="timeline-date">Date: <?php echo date('d/m/Y', strtotime($demande['date_entrevue'])); ?></p>
+                                        <?php if (!empty($demande['commentaire_entrevue'])): ?>
+                                        <div class="timeline-comment">
+                                            <p><?php echo nl2br(htmlspecialchars($demande['commentaire_entrevue'])); ?></p>
+                                        </div>
+                                        <?php endif; ?>
                                     </div>
                                 </li>
                                 
-                                <?php if (!empty($demande['date_confirmation'])): ?>
+                                <!-- Confirmation d'embauche -->
+                                <?php if (!empty($demande['date_confirmation']) || $demande['etat_avancement'] == 'confirmation_embauche' || checkPreviousStep($demande['etat_avancement'], 'confirmation_embauche')): ?>
                                 <li class="timeline-item active">
                                     <div class="timeline-marker"></div>
                                     <div class="timeline-content">
                                         <h4>Confirmation d'Embauche</h4>
-                                        <p class="timeline-date">Date: <?php echo date('d/m/Y', strtotime($demande['date_confirmation'])); ?></p>
+                                        <?php if (!empty($demande['date_confirmation'])): ?>
+                                            <p class="timeline-date">Date: <?php echo date('d/m/Y', strtotime($demande['date_confirmation'])); ?></p>
+                                        <?php endif; ?>
                                         <?php if (!empty($demande['commentaire_confirmation'])): ?>
                                         <div class="timeline-comment">
                                             <p><?php echo nl2br(htmlspecialchars($demande['commentaire_confirmation'])); ?></p>
@@ -121,20 +142,22 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
                                 </li>
                                 <?php endif; ?>
                                 
-                                <?php if (!empty($demande['type_contrat'])): ?>
+                                <!-- Type de contrat -->
+                                <?php if (!empty($demande['type_contrat']) || $demande['etat_avancement'] == 'type_contrat' || checkPreviousStep($demande['etat_avancement'], 'type_contrat')): ?>
                                 <li class="timeline-item active">
                                     <div class="timeline-marker"></div>
                                     <div class="timeline-content">
                                         <h4>Type de Contrat</h4>
-                                        <p class="timeline-detail">
-                                            Type: 
-                                            <?php 
-                                            echo htmlspecialchars($demande['type_contrat']);
-                                            if ($demande['type_contrat'] === 'AUTRE' && !empty($demande['autre_contrat'])) {
-                                                echo ' (' . htmlspecialchars($demande['autre_contrat']) . ')';
-                                            }
-                                            ?>
-                                        </p>
+                                        <?php if (!empty($demande['type_contrat'])): ?>
+                                            <p class="timeline-detail">
+                                                Type: <?php 
+                                                echo htmlspecialchars($demande['type_contrat']);
+                                                if ($demande['type_contrat'] === 'AUTRE' && !empty($demande['autre_contrat'])) {
+                                                    echo ' (' . htmlspecialchars($demande['autre_contrat']) . ')';
+                                                }
+                                                ?>
+                                            </p>
+                                        <?php endif; ?>
                                         <?php if (!empty($demande['commentaire_contrat'])): ?>
                                         <div class="timeline-comment">
                                             <p><?php echo nl2br(htmlspecialchars($demande['commentaire_contrat'])); ?></p>
@@ -144,48 +167,60 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
                                 </li>
                                 <?php endif; ?>
                                 
-                                <?php if (!empty($demande['commentaire_demande_acces'])): ?>
+                                <!-- Demande d'accès -->
+                                <?php if ($demande['etat_avancement'] == 'demande_acces' || checkPreviousStep($demande['etat_avancement'], 'demande_acces')): ?>
                                 <li class="timeline-item active">
                                     <div class="timeline-marker"></div>
                                     <div class="timeline-content">
                                         <h4>Demande d'Accès</h4>
+                                        <?php if (!empty($demande['commentaire_demande_acces'])): ?>
                                         <div class="timeline-comment">
                                             <p><?php echo nl2br(htmlspecialchars($demande['commentaire_demande_acces'])); ?></p>
                                         </div>
+                                        <?php endif; ?>
                                     </div>
                                 </li>
                                 <?php endif; ?>
                                 
-                                <?php if (!empty($demande['commentaire_reception_acces'])): ?>
+                                <!-- Réception des accès -->
+                                <?php if ($demande['etat_avancement'] == 'reception_acces' || checkPreviousStep($demande['etat_avancement'], 'reception_acces')): ?>
                                 <li class="timeline-item active">
                                     <div class="timeline-marker"></div>
                                     <div class="timeline-content">
                                         <h4>Réception des Accès</h4>
+                                        <?php if (!empty($demande['commentaire_reception_acces'])): ?>
                                         <div class="timeline-comment">
                                             <p><?php echo nl2br(htmlspecialchars($demande['commentaire_reception_acces'])); ?></p>
                                         </div>
+                                        <?php endif; ?>
                                     </div>
                                 </li>
                                 <?php endif; ?>
                                 
-                                <?php if (!empty($demande['commentaire_materiel'])): ?>
+                                <!-- Préparation du matériel -->
+                                <?php if ($demande['etat_avancement'] == 'preparation_materiel' || checkPreviousStep($demande['etat_avancement'], 'preparation_materiel')): ?>
                                 <li class="timeline-item active">
                                     <div class="timeline-marker"></div>
                                     <div class="timeline-content">
                                         <h4>Préparation du Matériel</h4>
+                                        <?php if (!empty($demande['commentaire_materiel'])): ?>
                                         <div class="timeline-comment">
                                             <p><?php echo nl2br(htmlspecialchars($demande['commentaire_materiel'])); ?></p>
                                         </div>
+                                        <?php endif; ?>
                                     </div>
                                 </li>
                                 <?php endif; ?>
                                 
-                                <?php if (!empty($demande['date_debut_travail'])): ?>
+                                <!-- Début du travail -->
+                                <?php if ($demande['etat_avancement'] == 'debut_travail' || checkPreviousStep($demande['etat_avancement'], 'debut_travail')): ?>
                                 <li class="timeline-item active">
                                     <div class="timeline-marker"></div>
                                     <div class="timeline-content">
                                         <h4>Début du Travail</h4>
-                                        <p class="timeline-date">Date: <?php echo date('d/m/Y', strtotime($demande['date_debut_travail'])); ?></p>
+                                        <?php if (!empty($demande['date_debut_travail'])): ?>
+                                            <p class="timeline-date">Date: <?php echo date('d/m/Y', strtotime($demande['date_debut_travail'])); ?></p>
+                                        <?php endif; ?>
                                         <?php if (!empty($demande['commentaire_debut'])): ?>
                                         <div class="timeline-comment">
                                             <p><?php echo nl2br(htmlspecialchars($demande['commentaire_debut'])); ?></p>
@@ -195,12 +230,15 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
                                 </li>
                                 <?php endif; ?>
                                 
-                                <?php if (!empty($demande['date_completion'])): ?>
+                                <!-- Processus complété -->
+                                <?php if ($demande['etat_avancement'] == 'complete'): ?>
                                 <li class="timeline-item active">
                                     <div class="timeline-marker"></div>
                                     <div class="timeline-content">
                                         <h4>Processus Complété</h4>
-                                        <p class="timeline-date">Date: <?php echo date('d/m/Y', strtotime($demande['date_completion'])); ?></p>
+                                        <?php if (!empty($demande['date_completion'])): ?>
+                                            <p class="timeline-date">Date: <?php echo date('d/m/Y', strtotime($demande['date_completion'])); ?></p>
+                                        <?php endif; ?>
                                         <?php if (!empty($demande['commentaire_final'])): ?>
                                         <div class="timeline-comment">
                                             <p><?php echo nl2br(htmlspecialchars($demande['commentaire_final'])); ?></p>
