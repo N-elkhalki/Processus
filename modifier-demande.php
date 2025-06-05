@@ -78,6 +78,15 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
                 $stmt = $conn->prepare($sql);
                 $stmt->bind_param("ssi", $etat_avancement, $commentaire, $id);
                 break;
+
+            case 'remise_materiel':
+                $date_remise = $_POST['date_remise_materiel'];
+                $date_signature = $_POST['date_signature_contrat'];
+                $commentaire = isset($_POST['commentaire_remise_materiel']) ? $_POST['commentaire_remise_materiel'] : '';
+                $sql = "UPDATE demandes SET etat_avancement = ?, date_remise_materiel = ?, date_signature_contrat = ?, commentaire_remise_materiel = ? WHERE id = ?";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param("ssssi", $etat_avancement, $date_remise, $date_signature, $commentaire, $id);
+                break;
                 
             case 'debut_travail':
                 $date_debut_travail = $_POST['date_debut_travail'];
@@ -199,12 +208,16 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
                                 <span class="step-number">6</span>
                                 <span class="step-label">Préparation du Matériel</span>
                             </li>
-                            <li class="<?php echo ($demande['etat_avancement'] == 'debut_travail' || checkPreviousStep($demande['etat_avancement'], 'debut_travail')) ? 'active' : ''; ?>">
+                            <li class="<?php echo ($demande['etat_avancement'] == 'remise_materiel' || checkPreviousStep($demande['etat_avancement'], 'remise_materiel')) ? 'active' : ''; ?>">
                                 <span class="step-number">7</span>
+                                <span class="step-label">Remise du Matériel</span>
+                            </li>
+                            <li class="<?php echo ($demande['etat_avancement'] == 'debut_travail' || checkPreviousStep($demande['etat_avancement'], 'debut_travail')) ? 'active' : ''; ?>">
+                                <span class="step-number">8</span>
                                 <span class="step-label">Début du Travail</span>
                             </li>
                             <li class="<?php echo ($demande['etat_avancement'] == 'complete') ? 'active' : ''; ?>">
-                                <span class="step-number">8</span>
+                                <span class="step-number">9</span>
                                 <span class="step-label">Processus Complété</span>
                             </li>
                         </ul>
@@ -225,7 +238,6 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
                             </select>
                         </div>
                         
-                        <!-- Champs dynamiques selon l'étape -->
                         <div id="etape-fields">
                             <!-- Entrevue -->
                             <div id="entrevue_fields" class="etape-field">
@@ -289,6 +301,22 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
                                 <div class="form-group">
                                     <label for="commentaire_materiel">Commentaire sur la Préparation du Matériel:</label>
                                     <textarea id="commentaire_materiel" name="commentaire_materiel" rows="3" placeholder="Détails sur le matériel préparé..."><?php echo htmlspecialchars($demande['commentaire_materiel']); ?></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Remise de matériel -->
+                            <div id="remise_materiel_fields" class="etape-field">
+                                <div class="form-group">
+                                    <label for="date_remise_materiel">Date de Remise du Matériel:</label>
+                                    <input type="date" id="date_remise_materiel" name="date_remise_materiel" value="<?php echo $demande['date_remise_materiel']; ?>">
+                                </div>
+                                <div class="form-group">
+                                    <label for="date_signature_contrat">Date de Signature du Contrat:</label>
+                                    <input type="date" id="date_signature_contrat" name="date_signature_contrat" value="<?php echo $demande['date_signature_contrat']; ?>">
+                                </div>
+                                <div class="form-group">
+                                    <label for="commentaire_remise_materiel">Commentaire sur la Remise du Matériel:</label>
+                                    <textarea id="commentaire_remise_materiel" name="commentaire_remise_materiel" rows="3"><?php echo htmlspecialchars($demande['commentaire_remise_materiel']); ?></textarea>
                                 </div>
                             </div>
                             
