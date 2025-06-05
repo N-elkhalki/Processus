@@ -153,10 +153,6 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
                                 <span class="value"><?php echo htmlspecialchars($demande['projet']); ?></span>
                             </div>
                             <div class="info-item">
-                                <span class="label">Date prevue de travail:</span>
-                                <span class="value"><?php echo date('d/m/Y', strtotime($demande['date_prevue_travail'])); ?></span>
-                            </div>
-                            <div class="info-item">
                                 <span class="label">Date d'Entrevue:</span>
                                 <span class="value"><?php echo date('d/m/Y', strtotime($demande['date_entrevue'])); ?></span>
                             </div>
