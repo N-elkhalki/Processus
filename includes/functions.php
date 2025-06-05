@@ -10,6 +10,7 @@ function getStatusLabel($etat) {
         'demande_acces' => 'Demande d\'accès',
         'reception_acces' => 'Réception des accès',
         'preparation_materiel' => 'Préparation du matériel',
+        'remise_materiel' => 'Remise du matériel',
         'debut_travail' => 'Début du travail',
         'complete' => 'Processus complété'
     ];
@@ -28,8 +29,9 @@ function checkPreviousStep($currentStep, $checkStep) {
         'demande_acces' => 4,
         'reception_acces' => 5,
         'preparation_materiel' => 6,
-        'debut_travail' => 7,
-        'complete' => 8
+        'remise_materiel' => 7,
+        'debut_travail' => 8,
+        'complete' => 9
     ];
     
     if (!isset($order[$currentStep]) || !isset($order[$checkStep])) {
@@ -60,6 +62,9 @@ function getNextStates($currentStep) {
             'preparation_materiel' => 'Préparation du matériel'
         ],
         'preparation_materiel' => [
+            'remise_materiel' => 'Remise du matériel'
+        ],
+        'remise_materiel' => [
             'debut_travail' => 'Début du travail'
         ],
         'debut_travail' => [
