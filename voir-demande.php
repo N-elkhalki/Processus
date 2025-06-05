@@ -211,6 +211,27 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
                                     </div>
                                 </li>
                                 <?php endif; ?>
+
+                                <!-- Remise du matériel -->
+                                <?php if ($demande['etat_avancement'] == 'remise_materiel' || checkPreviousStep($demande['etat_avancement'], 'remise_materiel')): ?>
+                                <li class="timeline-item active">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <h4>Remise du Matériel</h4>
+                                        <?php if (!empty($demande['date_remise_materiel'])): ?>
+                                            <p class="timeline-date">Date de remise: <?php echo date('d/m/Y', strtotime($demande['date_remise_materiel'])); ?></p>
+                                        <?php endif; ?>
+                                        <?php if (!empty($demande['date_signature_contrat'])): ?>
+                                            <p class="timeline-date">Date de signature: <?php echo date('d/m/Y', strtotime($demande['date_signature_contrat'])); ?></p>
+                                        <?php endif; ?>
+                                        <?php if (!empty($demande['commentaire_remise_materiel'])): ?>
+                                        <div class="timeline-comment">
+                                            <p><?php echo nl2br(htmlspecialchars($demande['commentaire_remise_materiel'])); ?></p>
+                                        </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </li>
+                                <?php endif; ?>
                                 
                                 <!-- Début du travail -->
                                 <?php if ($demande['etat_avancement'] == 'debut_travail' || checkPreviousStep($demande['etat_avancement'], 'debut_travail')): ?>
