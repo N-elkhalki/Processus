@@ -26,12 +26,19 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
     // Traitement du formulaire de mise à jour
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $etat_avancement = $_POST['etat_avancement'];
-        $commentaire = isset($_POST['commentaire']) ? htmlspecialchars($_POST['commentaire']) : '';
         
         // Mise à jour selon l'état d'avancement
         switch ($etat_avancement) {
+            case 'entrevue':
+                $commentaire = isset($_POST['commentaire_entrevue']) ? $_POST['commentaire_entrevue'] : '';
+                $sql = "UPDATE demandes SET commentaire_entrevue = ? WHERE id = ?";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param("si", $commentaire, $id);
+                break;
+                
             case 'confirmation_embauche':
                 $date_confirmation = $_POST['date_confirmation'];
+                $commentaire = isset($_POST['commentaire_confirmation']) ? $_POST['commentaire_confirmation'] : '';
                 $sql = "UPDATE demandes SET etat_avancement = ?, date_confirmation = ?, commentaire_confirmation = ? WHERE id = ?";
                 $stmt = $conn->prepare($sql);
                 $stmt->bind_param("sssi", $etat_avancement, $date_confirmation, $commentaire, $id);
@@ -40,6 +47,7 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
             case 'type_contrat':
                 $type_contrat = $_POST['type_contrat'];
                 $autre_contrat = '';
+                $commentaire = isset($_POST['commentaire_contrat']) ? $_POST['commentaire_contrat'] : '';
                 
                 if ($type_contrat === 'AUTRE') {
                     $autre_contrat = htmlspecialchars($_POST['autre_contrat']);
@@ -51,18 +59,21 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
                 break;
                 
             case 'demande_acces':
+                $commentaire = isset($_POST['commentaire_demande_acces']) ? $_POST['commentaire_demande_acces'] : '';
                 $sql = "UPDATE demandes SET etat_avancement = ?, commentaire_demande_acces = ? WHERE id = ?";
                 $stmt = $conn->prepare($sql);
                 $stmt->bind_param("ssi", $etat_avancement, $commentaire, $id);
                 break;
                 
             case 'reception_acces':
+                $commentaire = isset($_POST['commentaire_reception_acces']) ? $_POST['commentaire_reception_acces'] : '';
                 $sql = "UPDATE demandes SET etat_avancement = ?, commentaire_reception_acces = ? WHERE id = ?";
                 $stmt = $conn->prepare($sql);
                 $stmt->bind_param("ssi", $etat_avancement, $commentaire, $id);
                 break;
                 
             case 'preparation_materiel':
+                $commentaire = isset($_POST['commentaire_materiel']) ? $_POST['commentaire_materiel'] : '';
                 $sql = "UPDATE demandes SET etat_avancement = ?, commentaire_materiel = ? WHERE id = ?";
                 $stmt = $conn->prepare($sql);
                 $stmt->bind_param("ssi", $etat_avancement, $commentaire, $id);
@@ -70,12 +81,14 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
                 
             case 'debut_travail':
                 $date_debut_travail = $_POST['date_debut_travail'];
+                $commentaire = isset($_POST['commentaire_debut']) ? $_POST['commentaire_debut'] : '';
                 $sql = "UPDATE demandes SET etat_avancement = ?, date_debut_travail = ?, commentaire_debut = ? WHERE id = ?";
                 $stmt = $conn->prepare($sql);
                 $stmt->bind_param("sssi", $etat_avancement, $date_debut_travail, $commentaire, $id);
                 break;
                 
             case 'complete':
+                $commentaire = isset($_POST['commentaire_final']) ? $_POST['commentaire_final'] : '';
                 $sql = "UPDATE demandes SET etat_avancement = ?, date_completion = NOW(), commentaire_final = ? WHERE id = ?";
                 $stmt = $conn->prepare($sql);
                 $stmt->bind_param("ssi", $etat_avancement, $commentaire, $id);
@@ -214,74 +227,88 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
                         
                         <!-- Champs dynamiques selon l'étape -->
                         <div id="etape-fields">
-                            <!-- Ces champs seront chargés dynamiquement par JavaScript -->
+                            <!-- Entrevue -->
+                            <div id="entrevue_fields" class="etape-field">
+                                <div class="form-group">
+                                    <label for="commentaire_entrevue">Commentaire d'Entrevue:</label>
+                                    <textarea id="commentaire_entrevue" name="commentaire_entrevue" rows="3"><?php echo htmlspecialchars($demande['commentaire_entrevue']); ?></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Confirmation d'embauche -->
                             <div id="confirmation_embauche_fields" class="etape-field">
                                 <div class="form-group">
                                     <label for="date_confirmation">Date de Confirmation d'Embauche:</label>
-                                    <input type="date" id="date_confirmation" name="date_confirmation">
+                                    <input type="date" id="date_confirmation" name="date_confirmation" value="<?php echo $demande['date_confirmation']; ?>">
                                 </div>
                                 <div class="form-group">
-                                    <label for="commentaire">Commentaire:</label>
-                                    <textarea id="commentaire" name="commentaire" rows="3"></textarea>
+                                    <label for="commentaire_confirmation">Commentaire:</label>
+                                    <textarea id="commentaire_confirmation" name="commentaire_confirmation" rows="3"><?php echo htmlspecialchars($demande['commentaire_confirmation']); ?></textarea>
                                 </div>
                             </div>
                             
+                            <!-- Type de contrat -->
                             <div id="type_contrat_fields" class="etape-field">
                                 <div class="form-group">
                                     <label for="type_contrat">Type de Contrat:</label>
                                     <select id="type_contrat" name="type_contrat">
-                                        <option value="CDD">CDD</option>
-                                        <option value="CDI">CDI</option>
-                                        <option value="ANAPEC">ANAPEC</option>
-                                        <option value="AUTRE">AUTRE</option>
+                                        <option value="CDD" <?php echo $demande['type_contrat'] == 'CDD' ? 'selected' : ''; ?>>CDD</option>
+                                        <option value="CDI" <?php echo $demande['type_contrat'] == 'CDI' ? 'selected' : ''; ?>>CDI</option>
+                                        <option value="ANAPEC" <?php echo $demande['type_contrat'] == 'ANAPEC' ? 'selected' : ''; ?>>ANAPEC</option>
+                                        <option value="AUTRE" <?php echo $demande['type_contrat'] == 'AUTRE' ? 'selected' : ''; ?>>AUTRE</option>
                                     </select>
                                 </div>
-                                <div id="autre_contrat_field" class="form-group" style="display: none;">
+                                <div id="autre_contrat_field" class="form-group" style="display: <?php echo $demande['type_contrat'] == 'AUTRE' ? 'block' : 'none'; ?>;">
                                     <label for="autre_contrat">Préciser le Type de Contrat:</label>
-                                    <input type="text" id="autre_contrat" name="autre_contrat">
+                                    <input type="text" id="autre_contrat" name="autre_contrat" value="<?php echo htmlspecialchars($demande['autre_contrat']); ?>">
                                 </div>
                                 <div class="form-group">
-                                    <label for="commentaire">Commentaire:</label>
-                                    <textarea id="commentaire" name="commentaire" rows="3"></textarea>
+                                    <label for="commentaire_contrat">Commentaire:</label>
+                                    <textarea id="commentaire_contrat" name="commentaire_contrat" rows="3"><?php echo htmlspecialchars($demande['commentaire_contrat']); ?></textarea>
                                 </div>
                             </div>
                             
+                            <!-- Demande d'accès -->
                             <div id="demande_acces_fields" class="etape-field">
                                 <div class="form-group">
-                                    <label for="commentaire">Commentaire sur la Demande d'Accès:</label>
-                                    <textarea id="commentaire" name="commentaire" rows="3" placeholder="Détails sur les accès demandés..."></textarea>
+                                    <label for="commentaire_demande_acces">Commentaire sur la Demande d'Accès:</label>
+                                    <textarea id="commentaire_demande_acces" name="commentaire_demande_acces" rows="3" placeholder="Détails sur les accès demandés..."><?php echo htmlspecialchars($demande['commentaire_demande_acces']); ?></textarea>
                                 </div>
                             </div>
                             
+                            <!-- Réception des accès -->
                             <div id="reception_acces_fields" class="etape-field">
                                 <div class="form-group">
-                                    <label for="commentaire">Commentaire sur la Réception des Accès:</label>
-                                    <textarea id="commentaire" name="commentaire" rows="3" placeholder="Détails sur les accès reçus..."></textarea>
+                                    <label for="commentaire_reception_acces">Commentaire sur la Réception des Accès:</label>
+                                    <textarea id="commentaire_reception_acces" name="commentaire_reception_acces" rows="3" placeholder="Détails sur les accès reçus..."><?php echo htmlspecialchars($demande['commentaire_reception_acces']); ?></textarea>
                                 </div>
                             </div>
                             
+                            <!-- Préparation du matériel -->
                             <div id="preparation_materiel_fields" class="etape-field">
                                 <div class="form-group">
-                                    <label for="commentaire">Commentaire sur la Préparation du Matériel:</label>
-                                    <textarea id="commentaire" name="commentaire" rows="3" placeholder="Détails sur le matériel préparé..."></textarea>
+                                    <label for="commentaire_materiel">Commentaire sur la Préparation du Matériel:</label>
+                                    <textarea id="commentaire_materiel" name="commentaire_materiel" rows="3" placeholder="Détails sur le matériel préparé..."><?php echo htmlspecialchars($demande['commentaire_materiel']); ?></textarea>
                                 </div>
                             </div>
                             
+                            <!-- Début du travail -->
                             <div id="debut_travail_fields" class="etape-field">
                                 <div class="form-group">
                                     <label for="date_debut_travail">Date de Début du Travail:</label>
-                                    <input type="date" id="date_debut_travail" name="date_debut_travail">
+                                    <input type="date" id="date_debut_travail" name="date_debut_travail" value="<?php echo $demande['date_debut_travail']; ?>">
                                 </div>
                                 <div class="form-group">
-                                    <label for="commentaire">Commentaire:</label>
-                                    <textarea id="commentaire" name="commentaire" rows="3"></textarea>
+                                    <label for="commentaire_debut">Commentaire:</label>
+                                    <textarea id="commentaire_debut" name="commentaire_debut" rows="3"><?php echo htmlspecialchars($demande['commentaire_debut']); ?></textarea>
                                 </div>
                             </div>
                             
+                            <!-- Processus complété -->
                             <div id="complete_fields" class="etape-field">
                                 <div class="form-group">
-                                    <label for="commentaire">Commentaire Final:</label>
-                                    <textarea id="commentaire" name="commentaire" rows="3" placeholder="Commentaire de clôture du processus..."></textarea>
+                                    <label for="commentaire_final">Commentaire Final:</label>
+                                    <textarea id="commentaire_final" name="commentaire_final" rows="3" placeholder="Commentaire de clôture du processus..."><?php echo htmlspecialchars($demande['commentaire_final']); ?></textarea>
                                 </div>
                             </div>
                         </div>
